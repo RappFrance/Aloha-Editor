@@ -5,7 +5,6 @@
 define([	
 	'jquery',
 	'aloha/repository',
-	'aloha/repository',
 	'i18n!aloha/nls/i18n'],
 function($, repository, i18nCore){
 	"use strict";
@@ -13,7 +12,7 @@ function($, repository, i18nCore){
 	    GENTICS = window.GENTICS,
 	    Aloha = window.Aloha,
 	    Uploader = {
-		_constructor: function(repositoryId, repositoryName) {
+		_constructor: function(repositoryId, repositoryName, config) {
 			var uploadFolder = new this.UploadFolder({
 				id: "Uploads",
 				name: "Uploads",
@@ -26,6 +25,8 @@ function($, repository, i18nCore){
 			});
 			Aloha.Log.info(Aloha,"_constructor : Initializing default uploader");
 			this._super(repositoryId, repositoryName);
+
+			this.config = jQuery.extend(true, this.config, config);
 
 			this.uploadFolder = uploadFolder;
 			this.objects = [uploadFolder];
@@ -56,6 +57,7 @@ function($, repository, i18nCore){
 			};
 
 		},
+
 		config: {
 			// can add more elements for Ext window styling
 			'method':'POST',
@@ -132,15 +134,16 @@ function($, repository, i18nCore){
 				if (e.name == file.name) return true;
 				return false;
 			});
-			if (d.length > 0 ) {
+
+			if (d.length > 0) {
 				return d[0];
 			}
+
 			var len = this.objects.length,
 				id = 'ALOHA_idx_file' + len,
 				merge_conf = {};
-			jQuery.extend(true,merge_conf, this.config);
 
-
+			jQuery.extend(true, merge_conf, this.config);
 
 			this.objects.push(new this.UploadFile({
 				file:file,
@@ -162,18 +165,24 @@ function($, repository, i18nCore){
 //			} catch(error) {}
 			return this.objects[len];
 		},
-		startFileUpload: function(id,upload_config) {
+
+		startFileUpload: function(id, upload_config) {
+			console.dir(upload_config);
+			
 			var type='',
 				d = this.objects.filter(function(e, i, a) {
 				if (e.id == id) {return true;}
 				return false;
 			});
-			if (d.length > 0 ) {
-				jQuery.extend(true,upload_config,this.upload_conf);
+			if (d.length > 0 )
+			{
+				jQuery.extend(true, upload_config, this.config);
 				d[0].upload_config = upload_config;
 				this.uploadQueue.push(d[0]);
 				this.uploadQueue.processQueue();
-			} else {
+			}
+			else
+			{
 				Aloha.Log.error(this,"No file with that id");
 			}
 		},

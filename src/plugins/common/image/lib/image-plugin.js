@@ -377,8 +377,8 @@ define([
 						// Prepare
 						img = jQuery('<img/>');
 						img.css({
-							"max-width": that.maxWidth,
-							"max-height": that.maxHeight
+							"max-width": plugin.maxWidth,
+							"max-height": plugin.maxHeight
 						});
 						img.attr('id', fileObj.id);
 						if (typeof fileObj.src === 'undefined') {

@@ -34,20 +34,21 @@ define([
 	'aloha/plugin',
 	'draganddropfiles/dropfilesrepository'
 	],
-function($, Plugin,DropFilesRepository) {
+function($, Plugin, DropFilesRepository) {
 	"use strict";
 	var jQuery = $,
 	    GENTICS = window.GENTICS,	Aloha = window.Aloha;
-	return Plugin.create('draganddropfiles', {
+	return Plugin.create('draganddropfiles',
+	{
 
 		/**
 		 * Default config, each editable may have his own stuff.
 		 */
-		config: {'max_file_size': 300000,
+		config:
+		{
+			'max_file_size': 300000,
 			'max_file_count': 2,
 			'upload': {
-				'uploader_instance':new DropFilesRepository('draganddropfilesrepository','Dropped Files'),
-				'config': {
 					'callback': function(resp) { return resp;}, // what to do with the server response, must return the new file location,
 																//  if server return an error, throws an exception (throw "error")
 					'method':'POST',
@@ -61,10 +62,9 @@ function($, Plugin,DropFilesRepository) {
 					'image': {
 						'max_width': 800,
 						'max_height': 800
-				},
+					},
 				//'additional_params': {"location":""},
 				'www_encoded': false
-				}
 			}
 		},
 		/**
@@ -72,11 +72,15 @@ function($, Plugin,DropFilesRepository) {
 		 */
 		init: function() {
 			var that = this;
+
+			
 				// add the listener
 				that.setBodyDropHandler();
 	//			stylePath = GENTICS_Aloha_base + '/plugins/com.gentics.aloha.plugins.DragAndDropFiles/style.css';
 	//			jQuery('head').append('<link rel="stylesheet" href="'
 	//					+ stylePath + '"></script>');
+	//					
+	//					
 				if (that.settings === undefined) {
 					that.settings = that.config;
 				} else {
@@ -84,7 +88,7 @@ function($, Plugin,DropFilesRepository) {
 				}
 
 				try {
-					that.uploader = that.initUploader(that.settings);
+					that.uploader = that.initUploader();
 				} catch(error) {
 					Aloha.Log.warn(that,error);
 					Aloha.Log.warn(that,"Error creating uploader, no upload will be processed");
@@ -104,12 +108,12 @@ function($, Plugin,DropFilesRepository) {
 						'editable': that.targetEditable});
 					var edConfig = that.getEditableConfig(that.targetEditable);
 					while(--len >= 0) {
-						that.uploader.startFileUpload(that.filesObjs[len].id,edConfig.upload.config);
+						that.uploader.startFileUpload(that.filesObjs[len].id, edConfig.upload);
 					}
 				} else {
 					Aloha.trigger('aloha-drop-files-in-page', that.filesObjs);
 					while(--len >= 0) {
-						that.uploader.startFileUpload(that.filesObjs[len].id,that.config.upload.config);
+						that.uploader.startFileUpload(that.filesObjs[len].id, that.config.upload);
 					}
 				}
 			});
@@ -118,19 +122,20 @@ function($, Plugin,DropFilesRepository) {
 		/**
 		 * Init a custom uploader
 		 */
-		initUploader: function(customConfig) {
-			var
-				uploader_instance;
-			try {
-				uploader_instance = customConfig.upload.uploader_instance;
-			} catch(error) {
-				Aloha.Log.info(this,"Custom class loading error or not specified, using default");
-				uploader_instance = new DropFilesRepository('draganddropfilesrepository','Dropped Files');
-//				if (customConfig.upload.delegate) {
-//					uploader_instance.delegateUploadEvent = customConfig.upload.delegate;
-//				}
+		initUploader: function() {
+
+			var that = this,
+				uploader = that.settings.uploader;
+
+			if (!uploader) {
+				uploader = new DropFilesRepository('draganddropfilesrepository','Dropped Files', that.settings.upload);
 			}
-			return uploader_instance;
+
+//			if (customConfig.upload.delegate) {
+//					uploader_instance.delegateUploadEvent = that.settings.upload.delegate;
+//				}
+
+			return uploader;
 		},
 		/**
 		 * Prepare upload
