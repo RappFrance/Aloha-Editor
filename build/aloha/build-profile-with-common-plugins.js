@@ -394,11 +394,11 @@
     //calls. However, for some optimization scenarios,
     //Introduced in 1.0.3. Previous versions incorrectly found the nested calls
     //by default.
-    findNestedDependencies: false,
+    findNestedDependencies: true,
 
     //If set to true, any files that were combined into a build layer will be
     //removed from the output folder.
-    removeCombined: true,
+    removeCombined: false,
 
     //List the modules that will be optimized. All their immediate and deep
     //dependencies will be included in the module's file when the build is

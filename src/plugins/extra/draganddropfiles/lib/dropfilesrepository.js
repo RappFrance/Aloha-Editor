@@ -5,7 +5,6 @@
 define([	
 	'jquery',
 	'aloha/repository',
-	'aloha/repository',
 	'i18n!aloha/nls/i18n'],
 function($, repository, i18nCore){
 	"use strict";
@@ -13,19 +12,21 @@ function($, repository, i18nCore){
 	    GENTICS = window.GENTICS,
 	    Aloha = window.Aloha,
 	    Uploader = {
-		_constructor: function(repositoryId, repositoryName) {
+		_constructor: function(repositoryId, repositoryName, config) {
 			var uploadFolder = new this.UploadFolder({
 				id: "Uploads",
 				name: "Uploads",
 				displayName:"Uploads",
-				parentId:"/",
-				path:"Uploads",
+				parentId:"Uploads",
+				path:"/",
 				objectType:'folder',
 				type:'folder',
-				repositoryId:repositoryId
+				repositoryId: repositoryId
 			});
 			Aloha.Log.info(Aloha,"_constructor : Initializing default uploader");
 			this._super(repositoryId, repositoryName);
+
+			this.config = jQuery.extend(true, this.config, config);
 
 			this.uploadFolder = uploadFolder;
 			this.objects = [uploadFolder];
@@ -46,6 +47,8 @@ function($, repository, i18nCore){
 						if (!this.processUpload) { // prevents concurrent runs of processQueue
 							this.processUpload = true;
 							// recalculate queue lenght after each upload
+							console.dir(this.queue);
+
 							while(this.queue.length > 0) {
 								file = this.pop();
 								file.startUpload();
@@ -56,13 +59,14 @@ function($, repository, i18nCore){
 			};
 
 		},
+
 		config: {
 			// can add more elements for Ext window styling
 			'method':'POST',
 			'callback': function(resp) { return resp;},
 			'url': "",
 			'accept': 'application/json',
-			'file_name_param':"filename",
+			'file_name_param':"name",
 			'file_name_header':'X-File-Name',
 			'extra_headers':{}, //Extra parameters
 			'extra_post_data': {}, //Extra parameters
@@ -132,15 +136,16 @@ function($, repository, i18nCore){
 				if (e.name == file.name) return true;
 				return false;
 			});
-			if (d.length > 0 ) {
+
+			if (d.length > 0) {
 				return d[0];
 			}
+
 			var len = this.objects.length,
 				id = 'ALOHA_idx_file' + len,
 				merge_conf = {};
-			jQuery.extend(true,merge_conf, this.config);
 
-
+			jQuery.extend(true, merge_conf, this.config);
 
 			this.objects.push(new this.UploadFile({
 				file:file,
@@ -154,7 +159,8 @@ function($, repository, i18nCore){
 				type:'file',
 				ulProgress: 0,
 				parent: this.uploadFolder,
-				repositoryId:this.repositoryId}));
+				repositoryId:this.repositoryId})
+			);
 //			try {
 //				var repoNode = this.browser.tree.getNodeById("com.gentics.aloha.plugins.DragAndDropFiles");
 //				repoNode.expand();
@@ -162,18 +168,24 @@ function($, repository, i18nCore){
 //			} catch(error) {}
 			return this.objects[len];
 		},
-		startFileUpload: function(id,upload_config) {
+
+		startFileUpload: function(id, upload_config) {
+			
 			var type='',
 				d = this.objects.filter(function(e, i, a) {
 				if (e.id == id) {return true;}
 				return false;
 			});
-			if (d.length > 0 ) {
-				jQuery.extend(true,upload_config,this.upload_conf);
+
+			if (d.length > 0 )
+			{
+				jQuery.extend(true, upload_config, this.config);
 				d[0].upload_config = upload_config;
 				this.uploadQueue.push(d[0]);
 				this.uploadQueue.processQueue();
-			} else {
+			}
+			else
+			{
 				Aloha.Log.error(this,"No file with that id");
 			}
 		},
@@ -208,6 +220,7 @@ function($, repository, i18nCore){
 					that.ulProgress = rpe.loaded / rpe.total;
 					Aloha.trigger('aloha-upload-progress',that);
 					xhr.onload = function(load) {
+						console.dir(that);
 						try {
 							that.src = that.upload_config.callback(xhr.responseText);
 							Aloha.trigger('aloha-upload-success',that);
@@ -232,14 +245,16 @@ function($, repository, i18nCore){
 			 * Process upload of a file
 			 */
 			startUpload: function() {
+
+				console.dir(this);
 				//if ()
 				var xhr = this.xhr, options = this.upload_config, that = this, data;
 
 				xhr.open(options.method, typeof(options.url) == "function" ? options.url(number) : options.url, true);
 				xhr.setRequestHeader("Cache-Control", "no-cache");
 				xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
-				xhr.setRequestHeader(options.file_name_header, this.file.fileName);
-				xhr.setRequestHeader("X-File-Size", this.file.fileSize);
+				xhr.setRequestHeader(options.file_name_header, this.name);
+				xhr.setRequestHeader("X-File-Size", this.total);
 				xhr.setRequestHeader("Accept", options.accept);
 //			l
 				if (!options.send_multipart_form) {
@@ -249,6 +264,7 @@ function($, repository, i18nCore){
 						targetsize = {},
 						tempimg = new Image();
 					Aloha.Log.debug(Aloha,"Original Data (length:" + this.file.data.length + ") = " + this.file.data.substring(0,30));
+					
 					tempimg.onload = function() {
 						targetsize = {
 							height: tempimg.height,
@@ -287,6 +303,7 @@ function($, repository, i18nCore){
 						Aloha.Log.debug(Aloha,"Sent Data (length:" + data.length + ") = " + data.substring(0,30));
 						xhr.send(data);
 					};
+	
 					tempimg.src = this.file.data;
 				} else {
 					if (window.FormData) {//Many thanks to scottt.tw

@@ -35,7 +35,7 @@ define([
 	jQuery,
 	Class,
 	PluginManager,
-	console
+	_console
 ) {
 	"use strict";
 
@@ -74,7 +74,7 @@ define([
 			 * Settings of the plugin
 			 */
 			if (typeof name !== "string") {
-				console.error('Cannot initialise unnamed plugin, skipping');
+				_console.error('Cannot initialise unnamed plugin, skipping');
 			} else {
 				this.name = name;
 			}
@@ -89,7 +89,7 @@ define([
 			jQuery.each(plugin.dependencies, function (i, dependency) {
 				if (!Aloha.isPluginLoaded(dependency.toString())) {
 					satisfied = false;
-					console.error('plugin.' + plugin.name,
+					_console.error('plugin.' + plugin.name,
 							'Required plugin "' + dependency + '" not found.');
 					return false;
 				}
@@ -234,7 +234,7 @@ define([
 		 * @deprecated
 		 */
 		getUID: function (id) {
-			console.deprecated('plugin', 'getUID() is deprecated. Use plugin.name instead.');
+			_console.deprecated('plugin', 'getUID() is deprecated. Use plugin.name instead.');
 			return this.name;
 		},
 
@@ -257,8 +257,8 @@ define([
 		 * @deprecated
 		 */
 		log: function (level, message) {
-			console.deprecated('plugin', 'log() is deprecated. Use Aloha.console instead.');
-			console.log(level, this, message);
+			_console.deprecated('plugin', 'log() is deprecated. Use Aloha._console instead.');
+			_console.log(level, this, message);
 		}
 	});
 
@@ -271,7 +271,8 @@ define([
 	Plugin.create = function (pluginName, definition) {
 
 		var pluginInstance = new (Plugin.extend(definition))(pluginName);
-		pluginInstance.settings = jQuery.extendObjects(true, pluginInstance.defaults, Aloha.settings[pluginName]);
+
+		pluginInstance.settings = jQuery.extendObjects(true, pluginInstance.defaults, Aloha.settings.plugins[pluginName]);
 		PluginManager.register(pluginInstance);
 
 		return pluginInstance;
